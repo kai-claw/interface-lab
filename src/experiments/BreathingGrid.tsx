@@ -98,14 +98,26 @@ export default function BreathingGrid() {
     return () => cancelAnimationFrame(animRef.current);
   }, []);
 
-  const onMove = useCallback((e: React.MouseEvent) => {
-    const rect = (e.target as HTMLElement).closest('canvas')?.getBoundingClientRect();
-    if (!rect) return;
+  const updateMouse = useCallback((clientX: number, clientY: number) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
     mouseRef.current = {
-      x: ((e.clientX - rect.left) / rect.width) * (GRID_SIZE * (CELL_SIZE + GAP)),
-      y: ((e.clientY - rect.top) / rect.height) * (GRID_SIZE * (CELL_SIZE + GAP)),
+      x: ((clientX - rect.left) / rect.width) * (GRID_SIZE * (CELL_SIZE + GAP)),
+      y: ((clientY - rect.top) / rect.height) * (GRID_SIZE * (CELL_SIZE + GAP)),
     };
   }, []);
+
+  const onMove = useCallback((e: React.MouseEvent) => {
+    updateMouse(e.clientX, e.clientY);
+  }, [updateMouse]);
+
+  const onTouchMove = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length > 0) {
+      e.preventDefault();
+      updateMouse(e.touches[0].clientX, e.touches[0].clientY);
+    }
+  }, [updateMouse]);
 
   const onLeave = useCallback(() => {
     mouseRef.current = { x: -999, y: -999 };
@@ -135,10 +147,14 @@ export default function BreathingGrid() {
 
       <canvas
         ref={canvasRef}
-        className="rounded-2xl cursor-crosshair"
+        className="rounded-2xl cursor-crosshair touch-none"
         style={{ width: '100%', maxWidth: 560, aspectRatio: '1' }}
+        role="img"
+        aria-label={`Breathing grid animation in ${mode} mode. Move cursor or touch to interact.`}
         onMouseMove={onMove}
         onMouseLeave={onLeave}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onLeave}
       />
     </div>
   );

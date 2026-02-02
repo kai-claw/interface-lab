@@ -1,5 +1,6 @@
-import { useState, useCallback, lazy, Suspense } from 'react';
+import { useState, useCallback, useEffect, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 // Lazy load experiments for code splitting
 const experiments = [
@@ -274,6 +275,15 @@ function ExperimentView({
 }) {
   const Component = experiment.component;
 
+  // Keyboard shortcut: Escape to go back
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onBack();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onBack]);
+
   return (
     <motion.div
       className="flex flex-col h-[calc(100vh-57px)]"
@@ -281,6 +291,8 @@ function ExperimentView({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.3 }}
+      role="region"
+      aria-label={`${experiment.title} experiment`}
     >
       {/* Experiment toolbar */}
       <div className="flex items-center gap-4 px-6 py-3" style={{
@@ -291,12 +303,16 @@ function ExperimentView({
           className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm cursor-pointer border-0 transition-colors"
           style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--color-text-muted)' }}
           onClick={onBack}
+          aria-label="Back to gallery"
         >
           ← Back
         </button>
-        <span className="text-lg">{experiment.icon}</span>
+        <span className="text-lg" aria-hidden="true">{experiment.icon}</span>
         <h2 className="font-bold text-base">{experiment.title}</h2>
         <div className="flex-1" />
+        <kbd className="hidden sm:inline text-xs text-[var(--color-text-muted)] opacity-50" aria-hidden="true">
+          Esc to close
+        </kbd>
         <div className="flex gap-2 hidden sm:flex">
           {experiment.tags.map(tag => (
             <span
@@ -310,11 +326,13 @@ function ExperimentView({
         </div>
       </div>
 
-      {/* Experiment content */}
+      {/* Experiment content with error boundary */}
       <div className="flex-1 overflow-auto p-6">
-        <Suspense fallback={<LoadingFallback />}>
-          <Component />
-        </Suspense>
+        <ErrorBoundary>
+          <Suspense fallback={<LoadingFallback />}>
+            <Component />
+          </Suspense>
+        </ErrorBoundary>
       </div>
     </motion.div>
   );
@@ -329,29 +347,55 @@ export default function App() {
 
   const goHome = useCallback(() => setActiveId(null), []);
 
+  // Keyboard shortcuts for gallery navigation
+  useEffect(() => {
+    if (activeExperiment) return; // Let ExperimentView handle its own shortcuts
+
+    const onKey = (e: KeyboardEvent) => {
+      const num = parseInt(e.key, 10);
+      if (num >= 1 && num <= experiments.length) {
+        e.preventDefault();
+        setActiveId(experiments[num - 1].id);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [activeExperiment]);
+
   return (
     <div className="min-h-screen" style={{ background: 'var(--color-bg)' }}>
+      {/* Skip navigation link for accessibility */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:rounded-lg focus:text-sm focus:font-medium"
+        style={{ background: 'var(--color-accent)', color: 'white' }}
+      >
+        Skip to content
+      </a>
+
       <Header onHome={goHome} hasActive={!!activeId} />
 
-      <AnimatePresence mode="wait">
-        {activeExperiment ? (
-          <ExperimentView
-            key={activeExperiment.id}
-            experiment={activeExperiment}
-            onBack={goHome}
-          />
-        ) : (
-          <motion.div
-            key="gallery"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.25 }}
-          >
-            <GalleryView onSelect={setActiveId} />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <main id="main-content">
+        <AnimatePresence mode="wait">
+          {activeExperiment ? (
+            <ExperimentView
+              key={activeExperiment.id}
+              experiment={activeExperiment}
+              onBack={goHome}
+            />
+          ) : (
+            <motion.div
+              key="gallery"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25 }}
+            >
+              <GalleryView onSelect={setActiveId} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </main>
     </div>
   );
 }

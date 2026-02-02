@@ -35,12 +35,13 @@ export default function CursorTrail() {
       ctx.scale(2, 2);
     };
     resize();
+    window.addEventListener('resize', resize);
 
-    const onMove = (e: MouseEvent) => {
+    const addPoint = (clientX: number, clientY: number) => {
       const rect = canvas.getBoundingClientRect();
       pointsRef.current.push({
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top,
+        x: clientX - rect.left,
+        y: clientY - rect.top,
         t: performance.now(),
       });
       if (pointsRef.current.length > 80) {
@@ -48,7 +49,17 @@ export default function CursorTrail() {
       }
     };
 
+    const onMove = (e: MouseEvent) => addPoint(e.clientX, e.clientY);
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (e.touches.length > 0) {
+        e.preventDefault();
+        addPoint(e.touches[0].clientX, e.touches[0].clientY);
+      }
+    };
+
     canvas.addEventListener('mousemove', onMove);
+    canvas.addEventListener('touchmove', onTouchMove, { passive: false });
 
     const animate = () => {
       const w = canvas.width / 2;
@@ -134,6 +145,8 @@ export default function CursorTrail() {
     animRef.current = requestAnimationFrame(animate);
     return () => {
       canvas.removeEventListener('mousemove', onMove);
+      canvas.removeEventListener('touchmove', onTouchMove);
+      window.removeEventListener('resize', resize);
       cancelAnimationFrame(animRef.current);
     };
   }, []);
@@ -163,12 +176,14 @@ export default function CursorTrail() {
 
       <canvas
         ref={canvasRef}
-        className="rounded-2xl cursor-none w-full max-w-2xl"
+        className="rounded-2xl cursor-none w-full max-w-2xl touch-none"
         style={{
           height: 360,
           background: 'rgba(255,255,255,0.02)',
           border: '1px solid var(--color-border)',
         }}
+        role="img"
+        aria-label={`Cursor trail canvas in ${mode} mode. Move cursor or drag finger to create trails.`}
       />
     </div>
   );
