@@ -728,7 +728,7 @@ export default function App() {
     if (hasShownWelcome.current) return;
     hasShownWelcome.current = true;
     if (!activeId) {
-      const timer = setTimeout(() => showToast('Try pressing 1–8 to jump to experiments ✨', 3000), 1500);
+      const timer = setTimeout(() => showToast(`Try pressing 1–${experiments.length} to jump to experiments ✨`, 3000), 1500);
       return () => clearTimeout(timer);
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps

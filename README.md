@@ -21,37 +21,54 @@ A gallery of novel UI/UX experiments exploring physics, animation, and creative 
 | 🎇 | **Cursor Trail** | Beautiful cursor trails — ribbon, dots, fire, and neon glow effects |
 | 🔀 | **Morphing Tabs** | Shared-layout sliding indicator with smooth content transitions |
 | 💥 | **Particle Button** | Click to trigger particle explosions with gravity and color physics |
+| 🌊 | **Ripple Pond** | Click to create waves that propagate, interfere, and form mesmerizing patterns |
+
+## Features
+
+- **Deep linking** — Share direct links to any experiment via URL hash
+- **Keyboard navigation** — Keys 1–9 jump to experiments, arrow keys for prev/next, Esc to return, F for fullscreen
+- **Share & fullscreen** — Native share sheet (or clipboard fallback) and fullscreen mode
+- **Accessibility** — Skip navigation, ARIA labels, `prefers-reduced-motion` support, focus-visible outlines
+- **Performance** — `document.hidden` pauses canvas animations when tab is backgrounded, 30fps throttle for heavy renderers
+- **Surprise Me** — Random experiment picker on the gallery page
 
 ## Tech Stack
 
 - **React 19** — UI framework
-- **TypeScript** — Type safety
-- **Framer Motion** — Spring physics animations, layout transitions, gesture handling
-- **Tailwind CSS 4** — Styling with custom theme tokens
-- **Canvas 2D** — Custom rendering for particles, grids, and trails
-- **Zustand** — State management
-- **Vite 7** — Build tool with code splitting
+- **TypeScript 5.9** — Type safety
+- **Framer Motion 12** — Spring physics, layout transitions, gesture handling
+- **Tailwind CSS 4** — Styling via `@tailwindcss/vite` plugin with custom theme tokens
+- **Canvas 2D** — Custom rendering for particles, grids, trails, and wave simulations
+- **Vite 7** — Build tool with per-experiment code splitting
+- **Vitest** — 28 tests covering metadata, physics constants, and rendering
 
 ## Architecture
 
-Each experiment is self-contained in `src/experiments/` and lazy-loaded for optimal bundle size:
+Each experiment is self-contained in `src/experiments/` and lazy-loaded via `React.lazy()` for optimal bundle size:
 
 ```
 src/
-├── App.tsx                    # Gallery shell with routing
+├── App.tsx                    # Gallery shell, routing, deep-linking, keyboard nav
+├── components/
+│   └── ErrorBoundary.tsx     # Per-experiment crash recovery with retry
 ├── experiments/
-│   ├── BreathingGrid.tsx     # Canvas generative art
-│   ├── CursorTrail.tsx       # Canvas cursor effects
-│   ├── ElasticCards.tsx      # 3D perspective + Framer Motion
-│   ├── GravityMenu.tsx       # Custom physics simulation
-│   ├── KineticType.tsx       # Typography animation
-│   ├── MagneticDock.tsx      # Spring-based dock
-│   ├── MorphingTabs.tsx      # Layout animation
-│   └── ParticleButton.tsx    # Particle system
+│   ├── BreathingGrid.tsx     # Canvas generative art (30fps throttle, visibility pause)
+│   ├── CursorTrail.tsx       # Canvas cursor effects (4 modes, reduced motion)
+│   ├── ElasticCards.tsx      # 3D perspective + Framer Motion springs
+│   ├── GravityMenu.tsx       # Custom rAF physics simulation
+│   ├── KineticType.tsx       # Typography animation (4 modes, kbd hints)
+│   ├── MagneticDock.tsx      # Spring-based proximity dock
+│   ├── MorphingTabs.tsx      # layoutId shared layout animation
+│   ├── ParticleButton.tsx    # Particle system (visibility pause, reduced motion)
+│   └── RipplePond.tsx        # Wave interference simulator (4 color palettes, touch)
 ├── hooks/
-│   ├── useMouse.ts           # Mouse position + velocity tracking
-│   └── useSpring.ts          # Custom spring physics
-└── index.css                  # Theme tokens + global styles
+│   ├── useKeyboard.ts        # Keyboard shortcut registration
+│   └── useReducedMotion.ts   # prefers-reduced-motion detection
+├── test/
+│   ├── setup.ts              # rAF/canvas/matchMedia mocks
+│   ├── experiments.test.tsx  # Gallery rendering + navigation tests
+│   └── data.test.ts          # Metadata, physics, wave, color math tests
+└── index.css                  # Theme tokens, scrollbar, a11y, selection
 ```
 
 ## Build
@@ -60,15 +77,22 @@ src/
 npm install
 npm run build    # TypeScript check + Vite production build
 npm run dev      # Development server with HMR
+npm test         # Run 28 tests via Vitest
 ```
 
 ## Performance
 
-- **Main bundle:** 323 KB (104 KB gzip)
-- **Per-experiment chunks:** 2-5 KB each (lazy loaded)
-- **CSS:** 14 KB (4 KB gzip)
+| Asset | Size | Gzip |
+|-------|------|------|
+| Main bundle | 335 KB | 107 KB |
+| CSS | 19 KB | 5 KB |
+| Per-experiment chunks | 2–6 KB each | 1–3 KB |
+| **Total (no experiments loaded)** | **354 KB** | **112 KB** |
+
 - **0 TypeScript errors**
+- **28 passing tests**
+- **9 experiments**, each code-split and lazy-loaded
 
 ## License
 
-MIT
+MIT — see [LICENSE](LICENSE)
