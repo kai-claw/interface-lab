@@ -30,6 +30,12 @@ function ParticleCanvas({ particles }: { particles: Particle[] }) {
     const ctx = canvas.getContext('2d')!;
 
     const animate = () => {
+      // Pause when tab is hidden to save battery
+      if (document.hidden) {
+        animRef.current = requestAnimationFrame(animate);
+        return;
+      }
+
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       particlesRef.current = particlesRef.current.filter(p => p.life > 0);
 

@@ -34,11 +34,25 @@ export default function BreathingGrid() {
     canvas.height = totalSize;
 
     let time = 0;
+    let lastFrame = 0;
 
     const hslToString = (h: number, s: number, l: number, a: number) =>
       `hsla(${h}, ${s}%, ${l}%, ${a})`;
 
-    const animate = () => {
+    const animate = (now: number) => {
+      // Pause when tab is hidden to save battery
+      if (document.hidden) {
+        animRef.current = requestAnimationFrame(animate);
+        return;
+      }
+
+      // Throttle to ~30fps in reduced motion mode (every other frame)
+      if (reducedRef.current && now - lastFrame < 33) {
+        animRef.current = requestAnimationFrame(animate);
+        return;
+      }
+      lastFrame = now;
+
       // Throttle time progression when reduced motion is on
       if (!reducedRef.current) {
         time += 0.016;

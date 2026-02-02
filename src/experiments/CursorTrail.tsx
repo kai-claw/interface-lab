@@ -77,6 +77,12 @@ export default function CursorTrail() {
     canvas.addEventListener('touchmove', onTouchMove, { passive: false });
 
     const animate = () => {
+      // Pause when tab is hidden to save battery
+      if (document.hidden) {
+        animRef.current = requestAnimationFrame(animate);
+        return;
+      }
+
       const w = canvas.width / 2;
       const h = canvas.height / 2;
       ctx.clearRect(0, 0, w, h);
