@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, lazy, Suspense } from 'react';
+import { useState, useCallback, useEffect, lazy, Suspense, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
@@ -110,6 +110,144 @@ function LoadingFallback() {
         Loading experiment…
       </motion.p>
     </div>
+  );
+}
+
+function Toast({ message, visible }: { message: string; visible: boolean }) {
+  return (
+    <AnimatePresence>
+      {visible && (
+        <motion.div
+          className="fixed bottom-6 left-1/2 z-[100] px-5 py-3 rounded-xl text-sm font-medium pointer-events-none"
+          style={{
+            background: 'rgba(99, 102, 241, 0.95)',
+            color: 'white',
+            boxShadow: '0 8px 32px rgba(99, 102, 241, 0.3)',
+          }}
+          initial={{ opacity: 0, y: 20, x: '-50%' }}
+          animate={{ opacity: 1, y: 0, x: '-50%' }}
+          exit={{ opacity: 0, y: 10, x: '-50%' }}
+          transition={{ duration: 0.25 }}
+        >
+          {message}
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
+function useToast() {
+  const [toast, setToast] = useState<{ message: string; visible: boolean }>({ message: '', visible: false });
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const show = useCallback((message: string, duration = 2000) => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    setToast({ message, visible: true });
+    timerRef.current = setTimeout(() => setToast(t => ({ ...t, visible: false })), duration);
+  }, []);
+
+  return { toast, show };
+}
+
+function ShareButton({ experimentId, color }: { experimentId: string; color: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleShare = async () => {
+    const url = `${window.location.origin}${window.location.pathname}#${experimentId}`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: 'Interface Lab', url });
+        return;
+      } catch {
+        // User cancelled or share failed, fall through to clipboard
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard API not available
+    }
+  };
+
+  return (
+    <motion.button
+      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm cursor-pointer border-0 transition-colors"
+      style={{
+        background: copied ? `${color}30` : 'rgba(255,255,255,0.06)',
+        color: copied ? color : 'var(--color-text-muted)',
+      }}
+      onClick={handleShare}
+      aria-label="Share this experiment"
+      whileHover={{ background: 'rgba(255,255,255,0.12)' }}
+      whileTap={{ scale: 0.95 }}
+    >
+      {copied ? (
+        <>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+          Copied!
+        </>
+      ) : (
+        <>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+          </svg>
+          Share
+        </>
+      )}
+    </motion.button>
+  );
+}
+
+function FullscreenButton() {
+  const [isFs, setIsFs] = useState(false);
+
+  useEffect(() => {
+    const onChange = () => setIsFs(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', onChange);
+    return () => document.removeEventListener('fullscreenchange', onChange);
+  }, []);
+
+  const toggle = async () => {
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+      } else {
+        await document.documentElement.requestFullscreen();
+      }
+    } catch {
+      // Fullscreen not supported
+    }
+  };
+
+  return (
+    <motion.button
+      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm cursor-pointer border-0 transition-colors"
+      style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--color-text-muted)' }}
+      onClick={toggle}
+      aria-label={isFs ? 'Exit fullscreen' : 'Enter fullscreen'}
+      whileHover={{ background: 'rgba(255,255,255,0.12)' }}
+      whileTap={{ scale: 0.95 }}
+      title={isFs ? 'Exit fullscreen (F)' : 'Fullscreen (F)'}
+    >
+      {isFs ? (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="4 14 10 14 10 20" /><polyline points="20 10 14 10 14 4" />
+          <line x1="14" y1="10" x2="21" y2="3" /><line x1="3" y1="21" x2="10" y2="14" />
+        </svg>
+      ) : (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="15 3 21 3 21 9" /><polyline points="9 21 3 21 3 15" />
+          <line x1="21" y1="3" x2="14" y2="10" /><line x1="3" y1="21" x2="10" y2="14" />
+        </svg>
+      )}
+    </motion.button>
   );
 }
 
@@ -311,6 +449,40 @@ function GalleryView({ onSelect }: { onSelect: (id: string) => void }) {
         </motion.p>
       </motion.div>
 
+      {/* Surprise Me */}
+      <motion.div
+        className="relative flex justify-center mb-8"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.4 }}
+      >
+        <motion.button
+          className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold cursor-pointer border-0"
+          style={{
+            background: 'linear-gradient(135deg, rgba(99,102,241,0.15), rgba(236,72,153,0.15))',
+            color: 'var(--color-text)',
+            border: '1px solid rgba(99,102,241,0.2)',
+          }}
+          whileHover={{
+            scale: 1.05,
+            background: 'linear-gradient(135deg, rgba(99,102,241,0.25), rgba(236,72,153,0.25))',
+          }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => {
+            const randomIndex = Math.floor(Math.random() * experiments.length);
+            onSelect(experiments[randomIndex].id);
+          }}
+        >
+          <motion.span
+            animate={{ rotate: [0, 10, -10, 5, -5, 0] }}
+            transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+          >
+            🎲
+          </motion.span>
+          Surprise Me
+        </motion.button>
+      </motion.div>
+
       {/* Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {experiments.map((exp, i) => (
@@ -374,12 +546,19 @@ function ExperimentView({
   const prevExp = hasPrev ? experiments[experimentIndex - 1] : null;
   const nextExp = hasNext ? experiments[experimentIndex + 1] : null;
 
-  // Keyboard shortcuts: Escape to go back, arrow keys for prev/next
+  // Keyboard shortcuts: Escape to go back, arrow keys for prev/next, F for fullscreen
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onBack();
       if (e.key === 'ArrowLeft' && hasPrev) onNavigate('prev');
       if (e.key === 'ArrowRight' && hasNext) onNavigate('next');
+      if (e.key === 'f' || e.key === 'F') {
+        if (document.fullscreenElement) {
+          document.exitFullscreen().catch(() => {});
+        } else {
+          document.documentElement.requestFullscreen().catch(() => {});
+        }
+      }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -466,8 +645,12 @@ function ExperimentView({
           {experiment.title}
         </motion.h2>
         <div className="flex-1" />
-        <kbd className="hidden sm:inline text-xs text-[var(--color-text-muted)] opacity-50" aria-hidden="true">
-          ← → navigate · Esc close
+        <div className="hidden sm:flex items-center gap-2">
+          <ShareButton experimentId={experiment.id} color={experiment.color} />
+          <FullscreenButton />
+        </div>
+        <kbd className="hidden lg:inline text-xs text-[var(--color-text-muted)] opacity-50" aria-hidden="true">
+          ← → navigate · F fullscreen · Esc close
         </kbd>
         <div className="hidden sm:flex gap-2">
           {experiment.tags.map((tag, i) => (
@@ -497,8 +680,49 @@ function ExperimentView({
   );
 }
 
+// Read experiment ID from URL hash
+function getHashExperiment(): string | null {
+  const hash = window.location.hash.slice(1);
+  if (!hash) return null;
+  return experiments.find(e => e.id === hash) ? hash : null;
+}
+
 export default function App() {
-  const [activeId, setActiveId] = useState<string | null>(null);
+  const [activeId, setActiveId] = useState<string | null>(getHashExperiment);
+  const { toast, show: showToast } = useToast();
+  const hasShownWelcome = useRef(false);
+
+  // Sync URL hash → state (handle browser back/forward)
+  useEffect(() => {
+    const onHashChange = () => {
+      const id = getHashExperiment();
+      setActiveId(id);
+    };
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
+  }, []);
+
+  // Sync state → URL hash
+  useEffect(() => {
+    const newHash = activeId ? `#${activeId}` : '';
+    if (window.location.hash !== newHash) {
+      if (activeId) {
+        window.history.pushState(null, '', newHash);
+      } else {
+        window.history.pushState(null, '', window.location.pathname);
+      }
+    }
+  }, [activeId]);
+
+  // Welcome toast on first visit
+  useEffect(() => {
+    if (hasShownWelcome.current) return;
+    hasShownWelcome.current = true;
+    if (!activeId) {
+      const timer = setTimeout(() => showToast('Try pressing 1–8 to jump to experiments ✨', 3000), 1500);
+      return () => clearTimeout(timer);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const activeIndex = activeId
     ? experiments.findIndex(e => e.id === activeId)
@@ -568,6 +792,8 @@ export default function App() {
           )}
         </AnimatePresence>
       </main>
+
+      <Toast message={toast.message} visible={toast.visible} />
     </div>
   );
 }
