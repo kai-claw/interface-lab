@@ -173,7 +173,7 @@ export default function RipplePond() {
       for (let py = 0; py < height; py += step) {
         for (let px = 0; px < width; px += step) {
           let totalDisplacement = 0;
-          let dominantHue = palette.hueRange[0];
+          let dominantHue: number = palette.hueRange[0];
           let maxContrib = 0;
 
           for (let i = ripples.length - 1; i >= 0; i--) {

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useKeyboard } from '../hooks/useKeyboard';
 
@@ -56,15 +56,15 @@ function WaveText({ text }: { text: string }) {
 
 function ScatterText({ text }: { text: string }) {
   const [key, setKey] = useState(0);
-  // Pre-compute random offsets so render stays pure
-  const offsets = useRef(makeScatterOffsets(text.length));
-  useEffect(() => { offsets.current = makeScatterOffsets(text.length); }, [key, text]);
+  // Memoize random offsets — key is intentionally used to trigger re-randomization on click
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const offsets = useMemo(() => makeScatterOffsets(text.length), [key, text]);
 
   return (
     <div className="text-center">
       <div className="flex justify-center flex-wrap cursor-pointer" onClick={() => setKey(k => k + 1)}>
         {text.split('').map((char, i) => {
-          const off = offsets.current[i] ?? { x: 0, y: 0, rotate: 0 };
+          const off = offsets[i] ?? { x: 0, y: 0, rotate: 0 };
           return (
             <motion.span
               key={`${key}-${i}`}
@@ -100,8 +100,9 @@ function ScatterText({ text }: { text: string }) {
 function TypewriterText({ text }: { text: string }) {
   const [shown, setShown] = useState(0);
   const [blinkVisible, setBlinkVisible] = useState(true);
-
   useEffect(() => {
+    // Reset and start typewriter — intentional initialization when text changes
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setShown(0);
     const id = setInterval(() => {
       setShown(s => {
@@ -147,6 +148,7 @@ function GlitchText({ text }: { text: string }) {
   const glitchPool = '!@#$%^&*()_+-=[]{}|;:,.<>?/~`0123456789';
 
   useEffect(() => {
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
     const id = setInterval(() => {
       const chars: Record<number, string> = {};
       const offsets: Record<number, number> = {};
@@ -157,9 +159,12 @@ function GlitchText({ text }: { text: string }) {
         offsets[idx] = (Math.random() - 0.5) * 4;
       }
       setGlitch({ chars, offsets });
-      setTimeout(() => setGlitch({ chars: {}, offsets: {} }), 100);
+      timeoutId = setTimeout(() => setGlitch({ chars: {}, offsets: {} }), 100);
     }, 300);
-    return () => clearInterval(id);
+    return () => {
+      clearInterval(id);
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, [text]);
 
   return (

@@ -121,7 +121,7 @@ function Card3D({ title, description, gradient, icon, tags }: typeof CARDS[0]) {
 
 export default function ElasticCards() {
   return (
-    <div className="flex flex-col items-center justify-center h-full gap-8">
+    <div className="flex flex-col items-center justify-center h-full gap-8" role="region" aria-label="Elastic Cards — 3D perspective cards that track your cursor">
       <p className="text-[var(--color-text-muted)] text-sm text-center">
         Hover and tilt the cards — they follow your cursor with 3D perspective and light glare
       </p>

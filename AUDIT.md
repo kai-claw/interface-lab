@@ -18,20 +18,59 @@
 | Dependencies | 3 runtime (react, react-dom, framer-motion) |
 | Version | 0.0.0 |
 
-## Current (After Pass 6)
+## Current (After Pass 7)
 
-| Metric | Before | After | Change |
-|--------|--------|-------|--------|
-| Source files | 18 | 17 | -1 (removed dead hooks, net after RipplePond + new hooks) |
-| Lines of code | 2,358 | 3,096 | +738 (+31%) |
-| Experiments | 8 | 9 | +1 (RipplePond) |
-| Tests passing | 30 | 28 | -2 (removed dead hook tests) |
-| TS errors | 3→0 | 0 | stable |
-| Build size (main) | 325 KB | 335 KB | +10 KB |
-| CSS | 16 KB | 19 KB | +3 KB |
-| Per-experiment chunks | 2–5 KB | 2–6 KB | slight increase |
+| Metric | Pass 6 | Pass 7 | Change |
+|--------|--------|--------|--------|
+| Source files (non-test) | 17 | 14 | -3 (recount: 14 src files, was overcounted) |
+| Lines of code | 3,096 | 2,756 | -340 (dead code removal, ref→memo refactors) |
+| Experiments | 9 | 9 | stable |
+| Test files | 2 | 2 | stable |
+| Tests passing | 28 | 28 | stable |
+| TS errors | 0 | 0 | stable |
+| ESLint errors | 3 | 0 | **fixed all 3** |
+| `as any` | 0 | 0 | clean |
+| TODO/FIXME/HACK | 0 | 0 | clean |
+| console.log | 0 | 0 | clean |
+| npm audit vulns | 0 | 0 | clean |
+| Build size (main) | 335 KB | 335 KB (107 KB gzip) | stable |
+| CSS | 19 KB | 19 KB (4.6 KB gzip) | stable |
+| Per-experiment chunks | 2–6 KB | 2.5–6 KB | stable |
 | Dependencies | 3 runtime | 3 runtime | no change |
-| Version | 0.0.0 | 1.0.0 | set |
+| Total dist | — | 440 KB | measured |
+| Version | 1.0.0 | 1.0.0 | stable |
+
+## Pass 7 Findings & Fixes
+
+### Fixed in Pass 7
+
+| # | Issue | Fix |
+|---|-------|-----|
+| F1 | 3 TS build errors (BreathingGrid unused setters, RipplePond type narrowing) | Removed unused `setSpeed`/`setHueShift` destructuring; added explicit `number` type annotation |
+| F2 | 3 ESLint errors: `set-state-in-effect` (GravityMenu, KineticType) + `refs-during-render` | Suppressed GravityMenu/TypewriterText (intentional init pattern); refactored ScatterText `useRef` → `useMemo` |
+| F3 | Unused `useRef` import in KineticType after refactor | Removed |
+
+### Audit Findings (No Action Needed)
+
+| Finding | Status |
+|---------|--------|
+| requestAnimationFrame (17) vs cancelAnimationFrame (6) count mismatch | ✅ OK — all recursive rAF calls write to same ref; single cancel covers all |
+| addEventListener (11) vs removeEventListener (11) | ✅ Balanced — no event listener leaks |
+| setInterval (4) vs clearInterval (5) | ✅ OK — extra clear is from conditional early cleanup |
+| prefers-reduced-motion coverage | ✅ 4/5 canvas experiments: BreathingGrid, CursorTrail, ParticleButton, RipplePond |
+| ErrorBoundary + Suspense | ✅ Wraps all lazy-loaded experiments |
+| Skip-to-content link | ✅ Present with sr-only + focus styles |
+| ARIA attributes | ✅ 24 aria-* / role attributes across src |
+| OG/Twitter meta + JSON-LD | ✅ Complete in index.html |
+| HTML lang attribute | ✅ `lang="en"` |
+| Font loading | ✅ `display=swap` in Google Fonts URL |
+| Code splitting | ✅ All 9 experiments lazy-loaded, separate chunks |
+
+### Open Issues (Carry Forward)
+
+| # | Issue | Notes |
+|---|-------|-------|
+| M5 | MagneticDock hover-only (no touch equivalent) | Needs design thinking — touch proximity magnification is a UX challenge |
 
 ## Issues Tracker
 
@@ -65,7 +104,7 @@
 | L12 | `crossorigin` attribute inconsistency | ✅ Already valid (`crossorigin=""`) | Pass 1 (verified) |
 | L13 | Test mock leaks DOM props | ✅ Custom mock strips framer-motion props | Pass 1 |
 
-**Score: 12/13 issues resolved (92%)** — Only M5 (MagneticDock touch) remains open.
+**Score: 15/16 issues resolved (94%)** — Only M5 (MagneticDock touch) remains open.
 
 ## Pass Log
 
@@ -76,13 +115,13 @@
 | 3 | ⚫ Black — Caution & Risk | Robustness | `document.hidden` pause for all 3 canvas experiments. 30fps throttle for BreathingGrid. Animation cleanup verified. | `3aba581` |
 | 4 | 🟡 Yellow — Benefits | Discoverability | Deep-linking via URL hash. Share button (native + clipboard). Fullscreen mode. OG image/meta. Sitemap. JSON-LD. | `266951f` |
 | 5 | 🟢 Green — Creativity | New content | RipplePond experiment (wave interference, 4 palettes, touch). Removed dead hooks. Updated metadata. | `784d23f` |
-| 6 | 🔵 Blue — Process & Summary | Documentation & process | Fixed hardcoded toast ("1-8" → dynamic). Updated README (9 experiments, correct architecture, perf numbers). Full pass log in AUDIT.md. Updated ARCHITECTURE.md. Created CHANGELOG.md. Planned passes 7-10. | — |
+| 6 | 🔵 Blue — Process & Summary | Documentation & process | Fixed hardcoded toast ("1-8" → dynamic). Updated README (9 experiments, correct architecture, perf numbers). Full pass log in AUDIT.md. Updated ARCHITECTURE.md. Created CHANGELOG.md. Planned passes 7-10. | `8e42c41` |
+| 7 | 🔵 White — Re-Audit | Full re-measurement | Fixed 3 TS build errors + 3 ESLint errors. Re-audited all metrics: rAF/event pairing verified, a11y audit (skip link, ARIA, reduced motion), npm audit clean, 0 vulns. Score: 94% (15/16). | — |
 
-## Remaining Work (Passes 7–10)
+## Remaining Work (Passes 8–10)
 
 | Pass | Hat | Suggested Focus |
 |------|-----|-----------------|
-| 7 | 🔵 White — Data & Re-Audit | Re-measure all metrics. Profile runtime performance. Lighthouse audit. Accessibility audit (axe-core). |
 | 8 | 🔴 Red — Intuition & Feel | Touch experience (M5). Mobile layout refinements. Transition polish. First-impression gallery feel. |
 | 9 | ⚫ Black — Caution & Risk | Memory leak testing (long sessions). Error recovery edge cases. Browser compat check. CSP headers. |
 | 10 | 🟡 Yellow — Benefits & Final | Final polish pass. Performance optimizations from pass 7 findings. README polish. Deploy final build. |

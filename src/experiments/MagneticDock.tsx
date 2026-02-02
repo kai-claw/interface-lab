@@ -91,7 +91,7 @@ export default function MagneticDock() {
   }, [mouseX]);
 
   return (
-    <div className="flex flex-col items-center justify-center h-full gap-8">
+    <div className="flex flex-col items-center justify-center h-full gap-8" role="region" aria-label="Magnetic Dock — proximity-based icon magnification">
       <div className="text-center space-y-2 mb-8">
         <p className="text-[var(--color-text-muted)] text-sm">
           Hover or drag across the dock icons — they magnify based on proximity

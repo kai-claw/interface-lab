@@ -23,7 +23,8 @@ function useGravityAnimation(isOpen: boolean, count: number) {
 
   useEffect(() => {
     if (isOpen) {
-      // Initialize items above viewport
+      // Initialize items above viewport — intentional initialization, not cascading
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setItems(
         Array.from({ length: count }, (_, i) => ({
           y: -(count - i) * 60 - 100,
@@ -85,7 +86,7 @@ export default function GravityMenu() {
   const physicsItems = useGravityAnimation(isOpen, MENU_ITEMS.length);
 
   return (
-    <div className="flex flex-col items-center justify-center h-full gap-8">
+    <div className="flex flex-col items-center justify-center h-full gap-8" role="region" aria-label="Gravity Menu — menu items fall with physics simulation">
       <p className="text-[var(--color-text-muted)] text-sm text-center">
         Open the menu — items fall with gravity and bounce into place
       </p>

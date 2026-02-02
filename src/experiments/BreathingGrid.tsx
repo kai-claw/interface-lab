@@ -11,8 +11,8 @@ export default function BreathingGrid() {
   const mouseRef = useRef({ x: -999, y: -999 });
   const animRef = useRef<number>(0);
   const [mode, setMode] = useState<'breathe' | 'ripple' | 'wave'>('breathe');
-  const [speed, setSpeed] = useState(1);
-  const [hueShift, setHueShift] = useState(0);
+  const [speed] = useState(1);
+  const [hueShift] = useState(0);
   const modeRef = useRef(mode);
   const speedRef = useRef(speed);
   const hueShiftRef = useRef(hueShift);
