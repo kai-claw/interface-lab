@@ -76,6 +76,15 @@ const experiments = [
     tags: ['Particles', 'Click', 'Canvas'],
     component: lazy(() => import('./experiments/ParticleButton')),
   },
+  {
+    id: 'ripple-pond',
+    title: 'Ripple Pond',
+    description: 'Click to create waves that propagate, interfere, and form mesmerizing patterns',
+    icon: '🌊',
+    color: '#0ea5e9',
+    tags: ['Waves', 'Physics', 'Touch'],
+    component: lazy(() => import('./experiments/RipplePond')),
+  },
 ];
 
 function LoadingFallback() {

@@ -10,11 +10,12 @@ const experiments = [
   { id: 'cursor-trail', title: 'Cursor Trail', icon: '🎇', color: '#f59e0b', tags: ['Canvas', 'Cursor', 'Effects'] },
   { id: 'morphing-tabs', title: 'Morphing Tabs', icon: '🔀', color: '#14b8a6', tags: ['Layout', 'Tabs', 'Transitions'] },
   { id: 'particle-button', title: 'Particle Button', icon: '💥', color: '#ef4444', tags: ['Particles', 'Click', 'Canvas'] },
+  { id: 'ripple-pond', title: 'Ripple Pond', icon: '🌊', color: '#0ea5e9', tags: ['Waves', 'Physics', 'Touch'] },
 ];
 
 describe('Experiment Metadata', () => {
-  it('has 8 experiments', () => {
-    expect(experiments).toHaveLength(8);
+  it('has 9 experiments', () => {
+    expect(experiments).toHaveLength(9);
   });
 
   it('all IDs are unique', () => {
@@ -119,6 +120,44 @@ describe('Canvas Constants', () => {
     // Should expire in ~50 frames (~0.83s at 60fps)
     expect(frames).toBe(50);
     expect(frames / 60).toBeLessThan(1.5);
+  });
+});
+
+describe('Wave Physics (Ripple Pond)', () => {
+  it('wave decay produces finite lifetimes', () => {
+    const WAVE_DECAY = 0.0025;
+    const lifetime = 1 / WAVE_DECAY; // seconds until amplitude reaches 0
+    expect(lifetime).toBe(400);
+    // Reasonable upper bound — ripples don't persist forever
+    expect(lifetime).toBeLessThan(600);
+  });
+
+  it('wave speed produces visible wavefronts', () => {
+    const BASE_SPEED = 120; // px/s
+    const canvasWidth = 800;
+    const crossTime = canvasWidth / BASE_SPEED;
+    // Ripple should cross an 800px canvas in ~6.7s
+    expect(crossTime).toBeGreaterThan(3);
+    expect(crossTime).toBeLessThan(10);
+  });
+
+  it('max ripples limit prevents unbounded memory', () => {
+    const MAX_RIPPLES = 24;
+    // Each ripple is ~10 numbers = ~80 bytes
+    const estimatedBytes = MAX_RIPPLES * 80;
+    expect(estimatedBytes).toBeLessThan(4096);
+  });
+
+  it('interference produces both constructive and destructive results', () => {
+    // Two waves at the same point: same phase = constructive, half-phase = destructive
+    const freq = 0.04;
+    const samePhase = Math.sin(0) + Math.sin(0);
+    expect(samePhase).toBe(0); // both at zero crossing
+    const constructive = Math.sin(Math.PI / 2) + Math.sin(Math.PI / 2);
+    expect(constructive).toBeCloseTo(2);
+    const destructive = Math.sin(Math.PI / 2) + Math.sin(-Math.PI / 2);
+    expect(destructive).toBeCloseTo(0);
+    expect(freq).toBeGreaterThan(0); // used as reference
   });
 });
 

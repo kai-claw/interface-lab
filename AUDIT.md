@@ -51,9 +51,6 @@ src/
 ├── index.css             # Theme tokens, scrollbar, a11y, selection (79 LOC)
 ├── components/
 │   └── ErrorBoundary.tsx # Crash recovery with retry (53 LOC)
-├── hooks/
-│   ├── useSpring.ts      # Custom spring physics (unused) (39 LOC)
-│   └── useMouse.ts       # Mouse position + velocity (unused) (73 LOC)
 ├── experiments/
 │   ├── ElasticCards.tsx   # 3D tilt + glare (135 LOC)
 │   ├── MagneticDock.tsx   # Proximity magnification dock (111 LOC)
@@ -62,12 +59,12 @@ src/
 │   ├── KineticType.tsx    # 4 text animation modes (236 LOC)
 │   ├── CursorTrail.tsx    # 4 cursor trail modes (190 LOC)
 │   ├── MorphingTabs.tsx   # Shared-layout tabs (174 LOC)
-│   └── ParticleButton.tsx # Click-triggered explosions (142 LOC)
+│   ├── ParticleButton.tsx # Click-triggered explosions (142 LOC)
+│   └── RipplePond.tsx     # Wave interference simulator (250 LOC)
 └── test/
     ├── setup.ts           # rAF/canvas/matchMedia mocks (60 LOC)
     ├── experiments.test.tsx# App rendering tests (103 LOC)
-    ├── data.test.ts       # Metadata + physics constants (144 LOC)
-    └── hooks.test.ts      # useSpringValue tests (69 LOC)
+    └── data.test.ts       # Metadata + physics + wave constants (170 LOC)
 ```
 
 ## Tech Stack
@@ -85,3 +82,4 @@ src/
 | 2/10 | Red Hat — Intuition & Feel | UX emotional response | Added prev/next experiment navigation (← → keys + buttons with counter). Added keyboard shortcut hints (kbd badges) to mode buttons in BreathingGrid, CursorTrail, KineticType. Added reduced motion support to CursorTrail (fewer points) and ParticleButton (reduced particle count). Added MIT LICENSE file. Updated toolbar keyboard hints. Resolves issues #2 (partially), #4, #6 (partially), #9. 0 TS errors, 30 tests, clean build. |
 | 3/10 | Black Hat — Caution & Risk | Performance & defensive coding | Added `document.hidden` checks to all 3 canvas animation loops (BreathingGrid, CursorTrail, ParticleButton) — pauses rendering when tab is hidden, saves battery/CPU on mobile. Added 30fps throttle to BreathingGrid in reduced motion mode (was uncapped 60fps for 400 cells). Verified all rAF/setInterval/setTimeout have proper cleanup. 0 TS errors, 30 tests, clean build. |
 | 4/10 | Yellow Hat — Optimism & Benefits | Amplify strengths, delight | **Hash-based URL routing** — experiments are now deep-linkable (`#elastic-cards`, etc.) with browser back/forward support. **Share button** — in experiment toolbar, copies deep link or triggers native share on mobile. **Fullscreen mode** — `F` key or button for immersive viewing. **"Surprise Me" button** — random experiment discovery on gallery page. **Welcome toast** — first-visit hint about keyboard shortcuts. **OG image** — SVG social preview card with experiment icons, gradient title, tech stack. **Sitemap.xml** — all 9 URLs (gallery + 8 experiments). **Twitter card image** — `og:image` + `twitter:image` meta tags. Resolves issues #2, #10, #11. 0 TS errors, 30 tests, clean build (335 KB main). |
+| 5/10 | Green Hat — Creativity | New ideas, creative expansion | **New: Ripple Pond** (9th experiment) — canvas wave interference simulator. 4 color palettes (Ocean/Sunset/Aurora/Neon), auto-ripple mode, pixel-level wave physics with constructive/destructive interference, full multi-touch support, drag-to-paint waves, keyboard shortcuts (1-4/A/C). ~250 LOC, 6KB code-split. **Removed dead code** — useMouse.ts, useSpring.ts, hooks.test.ts deleted (resolves issue #1). Updated sitemap (10 URLs), OG descriptions, test metadata. Confirmed issue #8 was false positive. 0 TS errors, 28 tests, clean build (335KB main). |

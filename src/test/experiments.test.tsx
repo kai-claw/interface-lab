@@ -45,7 +45,7 @@ describe('App — Gallery', () => {
     expect(screen.getByText('Interface Lab')).toBeInTheDocument();
   });
 
-  it('renders all 8 experiment cards', () => {
+  it('renders all 9 experiment cards', () => {
     render(<App />);
     expect(screen.getByText('Elastic Cards')).toBeInTheDocument();
     expect(screen.getByText('Magnetic Dock')).toBeInTheDocument();
@@ -55,6 +55,7 @@ describe('App — Gallery', () => {
     expect(screen.getByText('Cursor Trail')).toBeInTheDocument();
     expect(screen.getByText('Morphing Tabs')).toBeInTheDocument();
     expect(screen.getByText('Particle Button')).toBeInTheDocument();
+    expect(screen.getByText('Ripple Pond')).toBeInTheDocument();
   });
 
   it('renders experiment descriptions', () => {
@@ -80,7 +81,8 @@ describe('App — Gallery', () => {
   it('shows tag badges on cards', () => {
     render(<App />);
     expect(screen.getByText('3D')).toBeInTheDocument();
-    expect(screen.getByText('Physics')).toBeInTheDocument();
+    // 'Physics' appears on Gravity Menu + Ripple Pond
+    expect(screen.getAllByText('Physics').length).toBeGreaterThanOrEqual(2);
     // 'Canvas' appears on cards (Breathing Grid, Cursor Trail, Particle Button) + footer tech pill
     expect(screen.getAllByText('Canvas').length).toBeGreaterThanOrEqual(3);
   });

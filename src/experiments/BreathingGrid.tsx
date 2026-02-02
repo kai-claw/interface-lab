@@ -11,8 +11,14 @@ export default function BreathingGrid() {
   const mouseRef = useRef({ x: -999, y: -999 });
   const animRef = useRef<number>(0);
   const [mode, setMode] = useState<'breathe' | 'ripple' | 'wave'>('breathe');
+  const [speed, setSpeed] = useState(1);
+  const [hueShift, setHueShift] = useState(0);
   const modeRef = useRef(mode);
+  const speedRef = useRef(speed);
+  const hueShiftRef = useRef(hueShift);
   useEffect(() => { modeRef.current = mode; }, [mode]);
+  useEffect(() => { speedRef.current = speed; }, [speed]);
+  useEffect(() => { hueShiftRef.current = hueShift; }, [hueShift]);
   const reducedMotion = useReducedMotion();
   const reducedRef = useRef(reducedMotion);
   useEffect(() => { reducedRef.current = reducedMotion; }, [reducedMotion]);
@@ -55,7 +61,7 @@ export default function BreathingGrid() {
 
       // Throttle time progression when reduced motion is on
       if (!reducedRef.current) {
-        time += 0.016;
+        time += 0.016 * speedRef.current;
       }
       ctx.fillStyle = '#0a0a0f';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -82,21 +88,23 @@ export default function BreathingGrid() {
 
           const m = modeRef.current;
 
+          const hs = hueShiftRef.current;
+
           if (m === 'breathe') {
             const phase = time * 2 + row * 0.3 + col * 0.3;
             scale = 0.4 + Math.sin(phase) * 0.3 + mouseFactor * 0.4;
-            hue = 240 + row * 3 + col * 3 + Math.sin(time) * 30;
+            hue = 240 + hs + row * 3 + col * 3 + Math.sin(time) * 30;
             lightness = 30 + Math.sin(phase) * 15 + mouseFactor * 25;
           } else if (m === 'ripple') {
             const d = Math.sqrt((row - GRID_SIZE / 2) ** 2 + (col - GRID_SIZE / 2) ** 2);
             const ripple = Math.sin(d * 0.8 - time * 4);
             scale = 0.3 + ripple * 0.3 + mouseFactor * 0.5;
-            hue = 280 + d * 10 + time * 30;
+            hue = 280 + hs + d * 10 + time * 30;
             lightness = 25 + ripple * 15 + mouseFactor * 30;
           } else {
             const wave = Math.sin(col * 0.4 + time * 3) * Math.cos(row * 0.4 + time * 2);
             scale = 0.3 + wave * 0.35 + mouseFactor * 0.4;
-            hue = 160 + col * 5 + row * 5 + time * 20;
+            hue = 160 + hs + col * 5 + row * 5 + time * 20;
             lightness = 25 + wave * 15 + mouseFactor * 25;
           }
 

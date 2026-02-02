@@ -20,6 +20,8 @@ const SAMPLE_TEXTS = [
   'Future UI',
 ];
 
+const MAX_CUSTOM_LENGTH = 24;
+
 const MODE_INFO: Record<TypeMode, { name: string; emoji: string; key: string }> = {
   wave: { name: 'Wave', emoji: '🌊', key: 'W' },
   scatter: { name: 'Scatter', emoji: '💥', key: 'S' },
@@ -198,8 +200,10 @@ const TEXT_COMPONENTS: Record<TypeMode, React.ComponentType<{ text: string }>> =
 export default function KineticType() {
   const [mode, setMode] = useState<TypeMode>('wave');
   const [textIndex, setTextIndex] = useState(0);
+  const [customText, setCustomText] = useState('');
+  const [isCustom, setIsCustom] = useState(false);
   const TextComponent = TEXT_COMPONENTS[mode];
-  const text = SAMPLE_TEXTS[textIndex];
+  const text = isCustom && customText.trim() ? customText.trim() : SAMPLE_TEXTS[textIndex];
 
   const keyMap = useMemo(() => ({
     'w': () => setMode('wave'),
@@ -248,21 +252,42 @@ export default function KineticType() {
         </AnimatePresence>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex gap-2 flex-wrap justify-center">
         {SAMPLE_TEXTS.map((t, i) => (
           <button
             key={t}
             className="px-3 py-1.5 rounded-lg text-xs cursor-pointer border-0 transition-all"
             style={{
-              background: textIndex === i ? 'rgba(99,102,241,0.3)' : 'rgba(255,255,255,0.05)',
-              color: textIndex === i ? 'var(--color-accent)' : 'var(--color-text-muted)',
-              border: textIndex === i ? '1px solid var(--color-accent)' : '1px solid transparent',
+              background: !isCustom && textIndex === i ? 'rgba(99,102,241,0.3)' : 'rgba(255,255,255,0.05)',
+              color: !isCustom && textIndex === i ? 'var(--color-accent)' : 'var(--color-text-muted)',
+              border: !isCustom && textIndex === i ? '1px solid var(--color-accent)' : '1px solid transparent',
             }}
-            onClick={() => setTextIndex(i)}
+            onClick={() => { setTextIndex(i); setIsCustom(false); }}
           >
             {t}
           </button>
         ))}
+        <div className="flex items-center gap-1.5">
+          <input
+            type="text"
+            placeholder="Your text…"
+            maxLength={MAX_CUSTOM_LENGTH}
+            value={customText}
+            onChange={(e) => { setCustomText(e.target.value); setIsCustom(true); }}
+            onFocus={() => setIsCustom(true)}
+            className="px-3 py-1.5 rounded-lg text-xs border-0 outline-none transition-all w-32"
+            style={{
+              background: isCustom ? 'rgba(236,72,153,0.15)' : 'rgba(255,255,255,0.05)',
+              color: 'var(--color-text)',
+              border: isCustom ? '1px solid rgba(236,72,153,0.4)' : '1px solid transparent',
+            }}
+          />
+          {isCustom && customText && (
+            <span className="text-[10px] text-[var(--color-text-muted)] opacity-50">
+              {customText.length}/{MAX_CUSTOM_LENGTH}
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );
