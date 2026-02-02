@@ -1,0 +1,1 @@
+import{r as a}from"./index-DVGfWbWx.js";function f(n){a.useEffect(()=>{const r=e=>{const t=e.target.tagName;if(t==="INPUT"||t==="TEXTAREA"||t==="SELECT")return;const s=e.key.toLowerCase(),o=n[s];o&&(e.preventDefault(),o())};return window.addEventListener("keydown",r),()=>window.removeEventListener("keydown",r)},[n])}export{f as u};
