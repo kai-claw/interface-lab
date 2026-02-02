@@ -80,13 +80,35 @@ const experiments = [
 
 function LoadingFallback() {
   return (
-    <div className="flex items-center justify-center h-full">
-      <motion.div
-        className="w-8 h-8 rounded-full border-2 border-t-transparent"
-        style={{ borderColor: 'var(--color-accent)', borderTopColor: 'transparent' }}
-        animate={{ rotate: 360 }}
-        transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-      />
+    <div className="flex flex-col items-center justify-center h-full gap-4">
+      <div className="flex gap-2">
+        {[0, 1, 2, 3, 4].map(i => (
+          <motion.div
+            key={i}
+            className="w-3 h-3 rounded-full"
+            style={{ background: `hsl(${240 + i * 25}, 80%, 65%)` }}
+            animate={{
+              y: [0, -12, 0],
+              scale: [1, 1.3, 1],
+              opacity: [0.5, 1, 0.5],
+            }}
+            transition={{
+              duration: 0.8,
+              repeat: Infinity,
+              delay: i * 0.1,
+              ease: 'easeInOut',
+            }}
+          />
+        ))}
+      </div>
+      <motion.p
+        className="text-xs text-[var(--color-text-muted)]"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.3 }}
+      >
+        Loading experiment…
+      </motion.p>
     </div>
   );
 }
@@ -110,30 +132,38 @@ function ExperimentCard({
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.06, duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
-      whileHover={{ scale: 1.02, y: -4 }}
-      whileTap={{ scale: 0.98 }}
+      whileHover={{ scale: 1.04, y: -6 }}
+      whileTap={{ scale: 0.97 }}
       onClick={onClick}
     >
-      {/* Top accent gradient */}
+      {/* Top accent gradient — thicker, more visible */}
       <div
-        className="absolute top-0 left-0 right-0 h-1 opacity-60 transition-opacity group-hover:opacity-100"
-        style={{ background: experiment.color }}
+        className="absolute top-0 left-0 right-0 h-1.5 opacity-50 transition-all duration-300 group-hover:opacity-100 group-hover:h-2"
+        style={{ background: `linear-gradient(90deg, ${experiment.color}, ${experiment.color}cc)` }}
       />
 
-      {/* Subtle glow on hover */}
+      {/* Glow on hover — stronger, warmer */}
       <div
-        className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
+        className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
         style={{
-          background: `radial-gradient(circle at 50% 0%, ${experiment.color}15, transparent 70%)`,
+          background: `radial-gradient(ellipse at 50% -20%, ${experiment.color}25, transparent 70%)`,
+          boxShadow: `0 0 40px ${experiment.color}10`,
         }}
       />
 
       <div className="relative z-10">
         <div className="flex items-center gap-3 mb-3">
           <span className="text-2xl">{experiment.icon}</span>
-          <h3 className="text-base font-bold text-[var(--color-text)]">
+          <h3 className="text-base font-bold text-[var(--color-text)] flex-1">
             {experiment.title}
           </h3>
+          <kbd
+            className="text-[10px] font-mono px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-40 transition-opacity"
+            style={{ background: 'rgba(255,255,255,0.08)', color: 'var(--color-text-muted)' }}
+            aria-hidden="true"
+          >
+            {index + 1}
+          </kbd>
         </div>
 
         <p className="text-sm text-[var(--color-text-muted)] leading-relaxed mb-4">
@@ -211,28 +241,74 @@ function Header({ onHome, hasActive }: { onHome: () => void; hasActive: boolean 
   );
 }
 
+function AmbientOrbs() {
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
+      {[
+        { color: '#6366f1', x: '15%', y: '20%', size: 300, delay: 0 },
+        { color: '#ec4899', x: '80%', y: '30%', size: 250, delay: 2 },
+        { color: '#10b981', x: '50%', y: '70%', size: 200, delay: 4 },
+      ].map((orb, i) => (
+        <motion.div
+          key={i}
+          className="absolute rounded-full"
+          style={{
+            left: orb.x,
+            top: orb.y,
+            width: orb.size,
+            height: orb.size,
+            background: `radial-gradient(circle, ${orb.color}12, transparent 70%)`,
+            filter: 'blur(60px)',
+          }}
+          animate={{
+            x: [0, 30, -20, 0],
+            y: [0, -25, 15, 0],
+            scale: [1, 1.15, 0.9, 1],
+          }}
+          transition={{
+            duration: 12,
+            repeat: Infinity,
+            delay: orb.delay,
+            ease: 'easeInOut',
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
 function GalleryView({ onSelect }: { onSelect: (id: string) => void }) {
   return (
-    <div className="max-w-6xl mx-auto px-6 py-12">
+    <div className="relative max-w-6xl mx-auto px-6 py-12">
+      <AmbientOrbs />
+
       {/* Hero */}
       <motion.div
-        className="text-center mb-16"
+        className="relative text-center mb-16"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
         <motion.h2
-          className="text-4xl md:text-5xl font-black mb-4 bg-clip-text text-transparent"
+          className="text-4xl md:text-5xl font-black mb-4 bg-clip-text text-transparent shimmer-text"
           style={{
-            backgroundImage: 'linear-gradient(135deg, #6366f1, #ec4899, #10b981)',
+            backgroundImage: 'linear-gradient(135deg, #6366f1, #ec4899, #10b981, #6366f1)',
+            backgroundSize: '200% 100%',
           }}
+          animate={{ backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'] }}
+          transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
         >
           Explore Novel Interfaces
         </motion.h2>
-        <p className="text-[var(--color-text-muted)] text-lg max-w-xl mx-auto leading-relaxed">
+        <motion.p
+          className="text-[var(--color-text-muted)] text-lg max-w-xl mx-auto leading-relaxed"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.5 }}
+        >
           A collection of interactive UI experiments exploring physics, animation,
           and creative interaction paradigms. Built with React, Framer Motion, and Canvas.
-        </p>
+        </motion.p>
       </motion.div>
 
       {/* Grid */}
@@ -249,17 +325,32 @@ function GalleryView({ onSelect }: { onSelect: (id: string) => void }) {
 
       {/* Footer */}
       <motion.div
-        className="text-center mt-20 pt-8"
+        className="relative text-center mt-20 pt-8"
         style={{ borderTop: '1px solid var(--color-border)' }}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.8 }}
       >
-        <p className="text-sm text-[var(--color-text-muted)]">
-          Built with React · Framer Motion · Canvas · Tailwind CSS
+        <div className="flex items-center justify-center gap-3 mb-3">
+          {['React', 'Framer Motion', 'Canvas', 'Tailwind CSS'].map((tech, i) => (
+            <motion.span
+              key={tech}
+              className="px-3 py-1 rounded-full text-xs font-medium"
+              style={{ background: 'rgba(255,255,255,0.04)', color: 'var(--color-text-muted)' }}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.9 + i * 0.1 }}
+              whileHover={{ background: 'rgba(255,255,255,0.08)', scale: 1.05 }}
+            >
+              {tech}
+            </motion.span>
+          ))}
+        </div>
+        <p className="text-xs text-[var(--color-text-muted)] opacity-60">
+          {experiments.length} self-contained experiments · Hover, click, and interact
         </p>
-        <p className="text-xs text-[var(--color-text-muted)] mt-2 opacity-60">
-          Every experiment is self-contained. Hover, click, and interact.
+        <p className="text-xs text-[var(--color-text-muted)] mt-2 opacity-40">
+          Use keys 1–{experiments.length} to jump to any experiment
         </p>
       </motion.div>
     </div>
@@ -268,21 +359,31 @@ function GalleryView({ onSelect }: { onSelect: (id: string) => void }) {
 
 function ExperimentView({
   experiment,
+  experimentIndex,
   onBack,
+  onNavigate,
 }: {
   experiment: typeof experiments[0];
+  experimentIndex: number;
   onBack: () => void;
+  onNavigate: (direction: 'prev' | 'next') => void;
 }) {
   const Component = experiment.component;
+  const hasPrev = experimentIndex > 0;
+  const hasNext = experimentIndex < experiments.length - 1;
+  const prevExp = hasPrev ? experiments[experimentIndex - 1] : null;
+  const nextExp = hasNext ? experiments[experimentIndex + 1] : null;
 
-  // Keyboard shortcut: Escape to go back
+  // Keyboard shortcuts: Escape to go back, arrow keys for prev/next
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onBack();
+      if (e.key === 'ArrowLeft' && hasPrev) onNavigate('prev');
+      if (e.key === 'ArrowRight' && hasNext) onNavigate('next');
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [onBack]);
+  }, [onBack, onNavigate, hasPrev, hasNext]);
 
   return (
     <motion.div
@@ -295,36 +396,94 @@ function ExperimentView({
       aria-label={`${experiment.title} experiment`}
     >
       {/* Experiment toolbar */}
-      <div className="flex items-center gap-4 px-6 py-3" style={{
-        background: 'var(--color-surface)',
-        borderBottom: '1px solid var(--color-border)',
-      }}>
-        <button
+      <motion.div
+        className="flex items-center gap-3 px-4 sm:px-6 py-3"
+        style={{
+          background: 'var(--color-surface)',
+          borderBottom: '1px solid var(--color-border)',
+        }}
+        initial={{ y: -10, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.25 }}
+      >
+        <motion.button
           className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm cursor-pointer border-0 transition-colors"
           style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--color-text-muted)' }}
           onClick={onBack}
           aria-label="Back to gallery"
+          whileHover={{ background: 'rgba(255,255,255,0.12)', x: -2 }}
+          whileTap={{ scale: 0.95 }}
         >
           ← Back
-        </button>
-        <span className="text-lg" aria-hidden="true">{experiment.icon}</span>
-        <h2 className="font-bold text-base">{experiment.title}</h2>
+        </motion.button>
+
+        {/* Prev/Next navigation */}
+        <div className="flex items-center gap-1">
+          <motion.button
+            className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-sm cursor-pointer border-0 transition-colors disabled:opacity-25 disabled:cursor-default"
+            style={{ background: hasPrev ? 'rgba(255,255,255,0.06)' : 'transparent', color: 'var(--color-text-muted)' }}
+            onClick={() => hasPrev && onNavigate('prev')}
+            disabled={!hasPrev}
+            aria-label={prevExp ? `Previous: ${prevExp.title}` : 'No previous experiment'}
+            whileHover={hasPrev ? { background: 'rgba(255,255,255,0.12)' } : {}}
+            whileTap={hasPrev ? { scale: 0.95 } : {}}
+            title={prevExp ? prevExp.title : undefined}
+          >
+            ‹
+          </motion.button>
+          <span className="text-xs text-[var(--color-text-muted)] opacity-50 tabular-nums min-w-[3ch] text-center">
+            {experimentIndex + 1}/{experiments.length}
+          </span>
+          <motion.button
+            className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-sm cursor-pointer border-0 transition-colors disabled:opacity-25 disabled:cursor-default"
+            style={{ background: hasNext ? 'rgba(255,255,255,0.06)' : 'transparent', color: 'var(--color-text-muted)' }}
+            onClick={() => hasNext && onNavigate('next')}
+            disabled={!hasNext}
+            aria-label={nextExp ? `Next: ${nextExp.title}` : 'No next experiment'}
+            whileHover={hasNext ? { background: 'rgba(255,255,255,0.12)' } : {}}
+            whileTap={hasNext ? { scale: 0.95 } : {}}
+            title={nextExp ? nextExp.title : undefined}
+          >
+            ›
+          </motion.button>
+        </div>
+
+        <motion.span
+          className="text-lg"
+          aria-hidden="true"
+          initial={{ scale: 0, rotate: -90 }}
+          animate={{ scale: 1, rotate: 0 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 15, delay: 0.1 }}
+        >
+          {experiment.icon}
+        </motion.span>
+        <motion.h2
+          className="font-bold text-base"
+          initial={{ opacity: 0, x: -8 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.15 }}
+        >
+          {experiment.title}
+        </motion.h2>
         <div className="flex-1" />
         <kbd className="hidden sm:inline text-xs text-[var(--color-text-muted)] opacity-50" aria-hidden="true">
-          Esc to close
+          ← → navigate · Esc close
         </kbd>
-        <div className="flex gap-2 hidden sm:flex">
-          {experiment.tags.map(tag => (
-            <span
+        <div className="hidden sm:flex gap-2">
+          {experiment.tags.map((tag, i) => (
+            <motion.span
               key={tag}
               className="px-2 py-0.5 rounded text-xs"
               style={{ background: `${experiment.color}18`, color: experiment.color }}
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2 + i * 0.05 }}
             >
               {tag}
-            </span>
+            </motion.span>
           ))}
         </div>
-      </div>
+      </motion.div>
 
       {/* Experiment content with error boundary */}
       <div className="flex-1 overflow-auto p-6">
@@ -341,11 +500,22 @@ function ExperimentView({
 export default function App() {
   const [activeId, setActiveId] = useState<string | null>(null);
 
-  const activeExperiment = activeId
-    ? experiments.find(e => e.id === activeId) ?? null
-    : null;
+  const activeIndex = activeId
+    ? experiments.findIndex(e => e.id === activeId)
+    : -1;
+  const activeExperiment = activeIndex >= 0 ? experiments[activeIndex] : null;
 
   const goHome = useCallback(() => setActiveId(null), []);
+
+  const navigateExperiment = useCallback((direction: 'prev' | 'next') => {
+    setActiveId(prev => {
+      const idx = experiments.findIndex(e => e.id === prev);
+      if (idx < 0) return prev;
+      const next = direction === 'prev' ? idx - 1 : idx + 1;
+      if (next < 0 || next >= experiments.length) return prev;
+      return experiments[next].id;
+    });
+  }, []);
 
   // Keyboard shortcuts for gallery navigation
   useEffect(() => {
@@ -381,7 +551,9 @@ export default function App() {
             <ExperimentView
               key={activeExperiment.id}
               experiment={activeExperiment}
+              experimentIndex={activeIndex}
               onBack={goHome}
+              onNavigate={navigateExperiment}
             />
           ) : (
             <motion.div

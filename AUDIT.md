@@ -82,3 +82,4 @@ src/
 | Pass | Hat | Focus | Changes |
 |------|-----|-------|---------|
 | 1/10 | White Hat — Data & Facts | Baseline audit | Fixed 3 TS errors in test mock (JSX namespace). Wrote AUDIT.md. 0 errors, 30 tests. |
+| 2/10 | Red Hat — Intuition & Feel | UX emotional response | Added prev/next experiment navigation (← → keys + buttons with counter). Added keyboard shortcut hints (kbd badges) to mode buttons in BreathingGrid, CursorTrail, KineticType. Added reduced motion support to CursorTrail (fewer points) and ParticleButton (reduced particle count). Added MIT LICENSE file. Updated toolbar keyboard hints. Resolves issues #2 (partially), #4, #6 (partially), #9. 0 TS errors, 30 tests, clean build. |

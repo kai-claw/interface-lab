@@ -1,5 +1,6 @@
 import { useRef, useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useReducedMotion } from '../hooks/useReducedMotion';
 
 interface Particle {
   id: number;
@@ -74,16 +75,19 @@ export default function ParticleButton() {
   const [particles, setParticles] = useState<Particle[]>([]);
   const [clicks, setClicks] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  const reducedMotion = useReducedMotion();
 
   const spawnParticles = useCallback((e: React.MouseEvent, count: number) => {
+    // Reduce particle count for reduced motion preference
+    const actualCount = reducedMotion ? Math.min(count, 10) : count;
     const rect = containerRef.current?.getBoundingClientRect();
     if (!rect) return;
 
     const cx = ((e.clientX - rect.left) / rect.width) * 600;
     const cy = ((e.clientY - rect.top) / rect.height) * 400;
 
-    const newParticles: Particle[] = Array.from({ length: count }, (_, i) => {
-      const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.5;
+    const newParticles: Particle[] = Array.from({ length: actualCount }, (_, i) => {
+      const angle = (Math.PI * 2 * i) / actualCount + (Math.random() - 0.5) * 0.5;
       const speed = 2 + Math.random() * 6;
       return {
         id: Date.now() + i + Math.random(),
@@ -99,7 +103,7 @@ export default function ParticleButton() {
 
     setParticles(newParticles);
     setClicks(c => c + 1);
-  }, []);
+  }, [reducedMotion]);
 
   return (
     <div className="flex flex-col items-center justify-center h-full gap-8">

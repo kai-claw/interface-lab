@@ -80,6 +80,12 @@ export default function MagneticDock() {
     mouseX.set(e.clientX);
   }, [mouseX]);
 
+  const onTouchMove = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length > 0) {
+      mouseX.set(e.touches[0].clientX);
+    }
+  }, [mouseX]);
+
   const onLeave = useCallback(() => {
     mouseX.set(-200);
   }, [mouseX]);
@@ -88,12 +94,12 @@ export default function MagneticDock() {
     <div className="flex flex-col items-center justify-center h-full gap-8">
       <div className="text-center space-y-2 mb-8">
         <p className="text-[var(--color-text-muted)] text-sm">
-          Hover over the dock icons — they magnify based on cursor proximity
+          Hover or drag across the dock icons — they magnify based on proximity
         </p>
       </div>
       <div
         ref={dockRef}
-        className="flex items-end gap-2 px-4 py-3 rounded-2xl"
+        className="flex items-end gap-2 px-4 py-3 rounded-2xl touch-none"
         style={{
           background: 'rgba(255,255,255,0.05)',
           backdropFilter: 'blur(20px)',
@@ -101,6 +107,8 @@ export default function MagneticDock() {
         }}
         onMouseMove={onMove}
         onMouseLeave={onLeave}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onLeave}
       >
         {ICONS.map((icon, i) => (
           <DockIcon key={icon.label} {...icon} mouseX={mouseX} index={i} />

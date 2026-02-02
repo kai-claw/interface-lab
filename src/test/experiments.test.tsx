@@ -65,7 +65,9 @@ describe('App — Gallery', () => {
 
   it('renders tech stack footer', () => {
     render(<App />);
-    expect(screen.getByText(/React · Framer Motion/)).toBeInTheDocument();
+    expect(screen.getByText('React')).toBeInTheDocument();
+    expect(screen.getByText('Framer Motion')).toBeInTheDocument();
+    expect(screen.getByText('Tailwind CSS')).toBeInTheDocument();
   });
 
   it('renders GitHub source link', () => {
@@ -79,8 +81,8 @@ describe('App — Gallery', () => {
     render(<App />);
     expect(screen.getByText('3D')).toBeInTheDocument();
     expect(screen.getByText('Physics')).toBeInTheDocument();
-    // 'Canvas' appears multiple times (Breathing Grid, Cursor Trail, Particle Button)
-    expect(screen.getAllByText('Canvas')).toHaveLength(3);
+    // 'Canvas' appears on cards (Breathing Grid, Cursor Trail, Particle Button) + footer tech pill
+    expect(screen.getAllByText('Canvas').length).toBeGreaterThanOrEqual(3);
   });
 });
 

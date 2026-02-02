@@ -1,4 +1,6 @@
-import { useRef, useEffect, useCallback, useState } from 'react';
+import { useRef, useEffect, useCallback, useState, useMemo } from 'react';
+import { useReducedMotion } from '../hooks/useReducedMotion';
+import { useKeyboard } from '../hooks/useKeyboard';
 
 const GRID_SIZE = 20;
 const CELL_SIZE = 24;
@@ -10,7 +12,17 @@ export default function BreathingGrid() {
   const animRef = useRef<number>(0);
   const [mode, setMode] = useState<'breathe' | 'ripple' | 'wave'>('breathe');
   const modeRef = useRef(mode);
-  modeRef.current = mode;
+  useEffect(() => { modeRef.current = mode; }, [mode]);
+  const reducedMotion = useReducedMotion();
+  const reducedRef = useRef(reducedMotion);
+  useEffect(() => { reducedRef.current = reducedMotion; }, [reducedMotion]);
+
+  const keyMap = useMemo(() => ({
+    'b': () => setMode('breathe'),
+    'r': () => setMode('ripple'),
+    'w': () => setMode('wave'),
+  }), []);
+  useKeyboard(keyMap);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -27,7 +39,10 @@ export default function BreathingGrid() {
       `hsla(${h}, ${s}%, ${l}%, ${a})`;
 
     const animate = () => {
-      time += 0.016;
+      // Throttle time progression when reduced motion is on
+      if (!reducedRef.current) {
+        time += 0.016;
+      }
       ctx.fillStyle = '#0a0a0f';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -130,17 +145,23 @@ export default function BreathingGrid() {
       </p>
 
       <div className="flex gap-2">
-        {(['breathe', 'ripple', 'wave'] as const).map(m => (
+        {([
+          { mode: 'breathe' as const, emoji: '🫁', label: 'Breathe', key: 'B' },
+          { mode: 'ripple' as const, emoji: '💧', label: 'Ripple', key: 'R' },
+          { mode: 'wave' as const, emoji: '🌊', label: 'Wave', key: 'W' },
+        ]).map(({ mode: m, emoji, label, key }) => (
           <button
             key={m}
-            className="px-4 py-2 rounded-lg text-sm font-medium cursor-pointer border-0 transition-all"
+            className="px-4 py-2 rounded-lg text-sm font-medium cursor-pointer border-0 flex items-center gap-1.5 transition-all group"
             style={{
               background: mode === m ? 'var(--color-accent)' : 'rgba(255,255,255,0.05)',
               color: mode === m ? 'white' : 'var(--color-text-muted)',
             }}
             onClick={() => setMode(m)}
           >
-            {m.charAt(0).toUpperCase() + m.slice(1)}
+            <span>{emoji}</span>
+            {label}
+            <kbd className="hidden sm:inline text-[10px] opacity-40 group-hover:opacity-70 ml-1 px-1 py-0.5 rounded" style={{ background: 'rgba(255,255,255,0.1)' }} aria-hidden="true">{key}</kbd>
           </button>
         ))}
       </div>

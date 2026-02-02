@@ -1,12 +1,14 @@
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState, useMemo } from 'react';
+import { useReducedMotion } from '../hooks/useReducedMotion';
+import { useKeyboard } from '../hooks/useKeyboard';
 
 type TrailMode = 'ribbon' | 'dots' | 'fire' | 'neon';
 
-const MODE_CONFIG: Record<TrailMode, { name: string; emoji: string }> = {
-  ribbon: { name: 'Ribbon', emoji: '🎀' },
-  dots: { name: 'Dots', emoji: '⚪' },
-  fire: { name: 'Fire', emoji: '🔥' },
-  neon: { name: 'Neon', emoji: '💜' },
+const MODE_CONFIG: Record<TrailMode, { name: string; emoji: string; key: string }> = {
+  ribbon: { name: 'Ribbon', emoji: '🎀', key: 'R' },
+  dots: { name: 'Dots', emoji: '⚪', key: 'D' },
+  fire: { name: 'Fire', emoji: '🔥', key: 'F' },
+  neon: { name: 'Neon', emoji: '💜', key: 'N' },
 };
 
 interface TrailPoint {
@@ -21,7 +23,18 @@ export default function CursorTrail() {
   const animRef = useRef<number>(0);
   const [mode, setMode] = useState<TrailMode>('ribbon');
   const modeRef = useRef(mode);
-  modeRef.current = mode;
+  useEffect(() => { modeRef.current = mode; }, [mode]);
+  const reducedMotion = useReducedMotion();
+  const reducedRef = useRef(reducedMotion);
+  useEffect(() => { reducedRef.current = reducedMotion; }, [reducedMotion]);
+
+  const keyMap = useMemo(() => ({
+    'r': () => setMode('ribbon'),
+    'd': () => setMode('dots'),
+    'f': () => setMode('fire'),
+    'n': () => setMode('neon'),
+  }), []);
+  useKeyboard(keyMap);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -44,8 +57,10 @@ export default function CursorTrail() {
         y: clientY - rect.top,
         t: performance.now(),
       });
-      if (pointsRef.current.length > 80) {
-        pointsRef.current = pointsRef.current.slice(-80);
+      // Keep fewer points in reduced motion mode
+      const maxPoints = reducedRef.current ? 20 : 80;
+      if (pointsRef.current.length > maxPoints) {
+        pointsRef.current = pointsRef.current.slice(-maxPoints);
       }
     };
 
@@ -154,14 +169,16 @@ export default function CursorTrail() {
   return (
     <div className="flex flex-col items-center justify-center h-full gap-6">
       <p className="text-[var(--color-text-muted)] text-sm text-center">
-        Move your cursor across the canvas — choose different trail effects
+        {reducedMotion
+          ? 'Reduced motion enabled — trail effects are simplified'
+          : 'Move your cursor across the canvas — choose different trail effects'}
       </p>
 
       <div className="flex gap-2">
         {(Object.keys(MODE_CONFIG) as TrailMode[]).map(m => (
           <button
             key={m}
-            className="px-4 py-2 rounded-lg text-sm font-medium cursor-pointer border-0 flex items-center gap-1.5 transition-all"
+            className="px-4 py-2 rounded-lg text-sm font-medium cursor-pointer border-0 flex items-center gap-1.5 transition-all group"
             style={{
               background: mode === m ? 'var(--color-accent)' : 'rgba(255,255,255,0.05)',
               color: mode === m ? 'white' : 'var(--color-text-muted)',
@@ -170,6 +187,7 @@ export default function CursorTrail() {
           >
             <span>{MODE_CONFIG[m].emoji}</span>
             {MODE_CONFIG[m].name}
+            <kbd className="hidden sm:inline text-[10px] opacity-40 group-hover:opacity-70 ml-1 px-1 py-0.5 rounded" style={{ background: 'rgba(255,255,255,0.1)' }} aria-hidden="true">{MODE_CONFIG[m].key}</kbd>
           </button>
         ))}
       </div>
